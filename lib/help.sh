@@ -19,7 +19,14 @@ COMMANDS:
     completion                Output bash completion script
     help                      Show this help message
 
-To enable tab completion, add this to your shell profile:
+To enable tab completion:
+
+For Bash, add to ~/.bashrc or ~/.bash_profile:
+    eval "\$(bs completion)"
+
+For Zsh, add to ~/.zshrc:
+    autoload -U +X compinit && compinit
+    autoload -U +X bashcompinit && bashcompinit
     eval "\$(bs completion)"
 
 HELP_EOF

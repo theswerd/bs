@@ -4,7 +4,13 @@
 generate_completion_script() {
   cat <<'COMPLETION_SCRIPT'
 # Bash completion for bs command
-# To enable, add this to your ~/.bashrc or ~/.bash_profile:
+#
+# For Bash, add this to your ~/.bashrc or ~/.bash_profile:
+# eval "$(bs completion)"
+#
+# For Zsh, add this to your ~/.zshrc:
+# autoload -U +X compinit && compinit
+# autoload -U +X bashcompinit && bashcompinit
 # eval "$(bs completion)"
 
 _bs_completion() {
@@ -35,10 +41,16 @@ _bs_completion() {
       fi
     else
       # Search from current directory up to home directory
-      while [[ "$current_dir" != "/" && "$current_dir" == "$home_dir"* ]]; do
+      while [[ "$current_dir" != "/" ]]; do
         if [[ -f "$current_dir/.bs.json" ]]; then
           databases+=("$current_dir/.bs.json")
         fi
+
+        # Stop if we've reached home directory
+        if [[ "$current_dir" == "$home_dir" ]]; then
+          break
+        fi
+
         current_dir="$(dirname "$current_dir")"
       done
 
@@ -69,7 +81,7 @@ _bs_completion() {
   fi
 
   # First argument completions (or second if --local is present)
-  if [[ ${#COMP_WORDS[@]} -eq $((word_index + 1)) ]]; then
+  if [[ $COMP_CWORD -eq $word_index ]]; then
     local subcommands="--local add rm ls help completion"
     local stored_commands=""
     stored_commands=$(_get_all_stored_commands)
@@ -97,8 +109,8 @@ _bs_completion() {
       fi
       ;;
     rm)
-      # Complete with stored command names for removal
-      if [[ ${#COMP_WORDS[@]} -eq $((word_index + 2)) ]]; then
+      # Complete with stored command names for removal (multiple allowed)
+      if [[ ${#COMP_WORDS[@]} -ge $((word_index + 2)) ]]; then
         local stored_commands
         stored_commands=$(_get_all_stored_commands)
         COMPREPLY=( $(compgen -W "$stored_commands" -- "$cur") )
@@ -118,5 +130,7 @@ _bs_completion() {
 }
 
 complete -F _bs_completion bs
+complete -F _bs_completion bs.sh
+complete -F _bs_completion ./bs.sh
 COMPLETION_SCRIPT
 }
