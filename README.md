@@ -7,6 +7,24 @@ A basic hierarchical bash script manager that lets me manage command easily.
 - **bash** (or compatible shell)
 - **jq** - JSON processor for data manipulation
 
+## Tab Completion
+
+To enable tab completion:
+
+**For Bash**, add to `~/.bashrc` or `~/.bash_profile`:
+
+```bash
+eval "$(bs completion)"
+```
+
+**For Zsh**, add to `~/.zshrc`:
+
+```bash
+autoload -U +X compinit && compinit
+autoload -U +X bashcompinit && bashcompinit
+eval "$(bs completion)"
+```
+
 ## Usage
 
 ### Hierarchical Database System
@@ -36,13 +54,41 @@ bs --local ls
 bs --local rm test
 ```
 
+### Directory-Specific Commands
+
+Commands can be configured to always run in a specific directory:
+
+```bash
+# Always run in a specific directory
+bs add deploy "git push && ./deploy.sh" --dir ~/projects/myapp -n "Deploy application"
+
+# Always run in the directory where you added the command
+bs add build "npm run build" --cd -n "Build in project directory"
+
+# When you run these commands, bs will automatically change to the specified directory:
+bs deploy  # Runs in ~/projects/myapp regardless of current location
+bs build   # Runs in the directory where you originally added the command
+```
+
+The directory information is displayed when listing commands:
+
+```text
+deploy: git push && ./deploy.sh [Deploy application] (runs in /home/user/projects/myapp)
+build: npm run build [Build in project directory] (runs in /home/user/projects/myapp)
+```
+
 ### More Examples
 
 ```bash
 # Development workflow
-bs add server "python -m http.server 8000" -n "Start dev server"
+bs add server "python -m http.server 8000" -n "Start dev server" --cd
 bs add logs "tail -f /var/log/app.log" -n "Watch application logs"
 bs add backup "rsync -av ~/projects/ ~/backups/" -n "Backup projects"
+
+# Directory-specific commands
+bs add list-home "ls -la" --dir ~ -n "List files in home directory"
+bs add build "npm run build" --cd -n "Build project in current directory"
+bs add deploy "git push && ssh server deploy.sh" --dir ~/projects/myapp -n "Deploy from project root"
 
 # Git shortcuts
 bs add gc "git commit -am" -n "Quick commit with message"
@@ -57,23 +103,28 @@ bs add proc "ps aux | grep" -n "Find processes (usage: bs proc name)"
 
 ## Command Reference
 
-| Command                              | Description                                 | Example                                        |
-| ------------------------------------ | ------------------------------------------- | ---------------------------------------------- |
-| `add <name> <command...>`            | Store a new command                         | `bs add hello "echo 'Hello World!'"`           |
-| `add <name> <command...> -n "notes"` | Store command with notes                    | `bs add deploy "git push" -n "Deploy to prod"` |
-| `rm <name...>`                       | Remove one or more commands                 | `bs rm deploy build test`                      |
-| `ls [prefix]`                        | List commands (optionally filter by prefix) | `bs ls git`                                    |
-| `<name> [args...]`                   | Execute stored command with optional args   | `bs deploy --force`                            |
-| `--local`                            | Use local `.bs.json` only                   | `bs --local add test "npm test"`               |
-| `completion`                         | Output bash completion script               | `eval "$(bs completion)"`                      |
-| `help`                               | Show help message                           | `bs help`                                      |
+## Command Reference
+
+| Command                                | Description                                 | Example                                        |
+| -------------------------------------- | ------------------------------------------- | ---------------------------------------------- |
+| `add <name> <command...>`              | Store a new command                         | `bs add hello "echo 'Hello World!'"`           |
+| `add <name> <command...> -n "notes"`   | Store command with notes                    | `bs add deploy "git push" -n "Deploy to prod"` |
+| `add <name> <command...> --dir <path>` | Store command that runs in specific dir     | `bs add build "make" --dir ~/project`          |
+| `add <name> <command...> --cd`         | Store command that runs in current dir      | `bs add test "npm test" --cd`                  |
+| `rm <name...>`                         | Remove one or more commands                 | `bs rm deploy build test`                      |
+| `ls [prefix]`                          | List commands (optionally filter by prefix) | `bs ls git`                                    |
+| `<name> [args...]`                     | Execute stored command with optional args   | `bs deploy --force`                            |
+| `--local`                              | Use local `.bs.json` only                   | `bs --local add test "npm test"`               |
+| `completion`                           | Output bash completion script               | `eval "$(bs completion)"`                      |
+| `help`                                 | Show help message                           | `bs help`                                      |
 
 ## File Structure
 
-```
+```text
 bs/
 ├── bs.sh                 # Main executable script
 ├── lib/
+│   ├── colors.sh        # Color definitions and helper functions
 │   ├── config.sh        # Configuration and database management
 │   ├── commands.sh      # Core command operations (add/remove/list/run)
 │   ├── completion.sh    # Tab completion functionality
@@ -93,7 +144,13 @@ Commands are stored in JSON format:
   },
   "build": {
     "command": "npm run build",
-    "notes": "Build project for production"
+    "notes": "Build project for production",
+    "directory": "/home/user/projects/myapp"
+  },
+  "test": {
+    "command": "npm test",
+    "notes": "Run test suite",
+    "directory": "/home/user/projects/myapp"
   }
 }
 ```

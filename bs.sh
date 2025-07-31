@@ -5,6 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Source all library files
+source "$SCRIPT_DIR/lib/colors.sh"
 source "$SCRIPT_DIR/lib/config.sh"
 source "$SCRIPT_DIR/lib/help.sh"
 source "$SCRIPT_DIR/lib/commands.sh"

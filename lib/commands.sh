@@ -4,9 +4,10 @@
 add_command() {
   local name=""
   local notes=""
+  local directory=""
   local cmd_args=()
 
-  # Parse arguments for --notes/-n flag
+  # Parse arguments for --notes/-n, --dir/-d, and --here flags
   while [[ $# -gt 0 ]]; do
     case $1 in
       --notes|-n)
@@ -16,6 +17,23 @@ add_command() {
         }
         notes="$2"
         shift 2
+        ;;
+      --dir|-d)
+        [[ -n "$2" ]] || {
+          echo "Error: --dir/-d requires a directory path" >&2
+          return 1
+        }
+        # Convert to absolute path
+        directory="$(cd "$2" 2>/dev/null && pwd)" || {
+          echo "Error: Directory '$2' does not exist or is not accessible" >&2
+          return 1
+        }
+        shift 2
+        ;;
+      --cd)
+        # Use current directory
+        directory="$(pwd)"
+        shift
         ;;
       *)
         if [[ -z "$name" ]]; then
@@ -43,11 +61,6 @@ add_command() {
   # Join command arguments
   local cmd="${cmd_args[*]}"
 
-  # ANSI color codes
-  local BOLD='\033[1m'
-  local CYAN='\033[36m'
-  local RESET='\033[0m'
-
   local tmp
   tmp=$(mktemp) || {
     echo "Error: Failed to create temporary file" >&2
@@ -55,10 +68,14 @@ add_command() {
   }
 
   # Add command with new JSON structure to primary database
-  jq --arg n "$name" --arg c "$cmd" --arg notes "$notes" \
-    '.[$n] = {command: $c, notes: $notes}' "$DB" >"$tmp" && mv "$tmp" "$DB"
+  jq --arg n "$name" --arg c "$cmd" --arg notes "$notes" --arg dir "$directory" \
+    '.[$n] = {command: $c, notes: $notes, directory: $dir}' "$DB" >"$tmp" && mv "$tmp" "$DB"
 
-  printf "Added command ${BOLD}%s${RESET} to ${CYAN}%s${RESET}\n" "$name" "$DB" >&2
+  if [[ -n "$directory" ]]; then
+    printf "Added command $(color_bold "%s") to $(color_cyan "%s") (runs in $(color_cyan "%s"))\n" "$name" "$DB" "$directory" >&2
+  else
+    printf "Added command $(color_bold "%s") to $(color_cyan "%s")\n" "$name" "$DB" >&2
+  fi
 }
 
 remove_command() {
@@ -66,11 +83,6 @@ remove_command() {
     echo "Error: At least one command name is required" >&2
     return 1
   }
-
-  # ANSI color codes
-  local BOLD='\033[1m'
-  local CYAN='\033[36m'
-  local RESET='\033[0m'
 
   local databases
   databases=($(find_all_databases))
@@ -94,23 +106,23 @@ remove_command() {
     done
 
     if [[ -z "$found_db" ]]; then
-      printf "Warning: Command ${BOLD}%s${RESET} not found\n" "$name" >&2
+      printf "Warning: Command $(color_bold "%s") not found\n" "$name" >&2
       failed_removals+=("$name")
       continue
     fi
 
     local tmp
     tmp=$(mktemp) || {
-      printf "Error: Failed to create temporary file for ${BOLD}%s${RESET}\n" "$name" >&2
+      printf "Error: Failed to create temporary file for $(color_bold "%s")\n" "$name" >&2
       failed_removals+=("$name")
       continue
     }
 
     if jq --arg n "$name" 'del(.[$n])' "$found_db" >"$tmp" && mv "$tmp" "$found_db"; then
-      printf "Removed command ${BOLD}%s${RESET} from ${CYAN}%s${RESET}\n" "$name" "$found_db" >&2
+      printf "Removed command $(color_bold "%s") from $(color_cyan "%s")\n" "$name" "$found_db" >&2
       ((removal_count++))
     else
-      printf "Error: Failed to remove command ${BOLD}%s${RESET}\n" "$name" >&2
+      printf "Error: Failed to remove command $(color_bold "%s")\n" "$name" >&2
       failed_removals+=("$name")
       rm -f "$tmp"
     fi
@@ -125,7 +137,7 @@ remove_command() {
     printf "Failed to remove: "
     for i in "${!failed_removals[@]}"; do
       if [[ $i -gt 0 ]]; then printf ", "; fi
-      printf "${BOLD}%s${RESET}" "${failed_removals[$i]}"
+      printf "$(color_bold "%s")" "${failed_removals[$i]}"
     done
     printf "\n"
     return 1
@@ -139,12 +151,6 @@ list_commands() {
   local databases
   databases=($(find_all_databases))
   local all_commands="{}"
-
-  # ANSI color codes
-  local BOLD='\033[1m'
-  local BLUE='\033[34m'
-  local GRAY='\033[90m'
-  local RESET='\033[0m'
 
   # Merge all databases (later ones override earlier ones)
   for db_file in "${databases[@]}"; do
@@ -171,25 +177,35 @@ list_commands() {
     local name="$1"
     local command="$2"
     local notes="$3"
+    local directory="$4"
 
+    # Build the base line: name: command
+    local line="$(color_bold "$name"): $(color_blue "$command")"
+
+    # Add notes in brackets if present
     if [[ -n "$notes" && "$notes" != "null" && "$notes" != "" ]]; then
-      printf "${BOLD}%s${RESET}: ${BLUE}%s${RESET} ${GRAY}[%s]${RESET}\n" "$name" "$command" "$notes"
-    else
-      printf "${BOLD}%s${RESET}: ${BLUE}%s${RESET}\n" "$name" "$command"
+      line+=" $(color_gray "[$notes]")"
     fi
+
+    # Add directory in parentheses if present
+    if [[ -n "$directory" && "$directory" != "null" && "$directory" != "" ]]; then
+      line+=" $(color_gray "(runs in $(color_cyan "$directory"))")"
+    fi
+
+    printf "%s\n" "$line"
   }
 
   if [[ -z "$prefix" ]]; then
     # List all commands with colored formatting
-    echo "$all_commands" | jq -r 'to_entries[] | "\(.key)\t\(.value.command)\t\(.value.notes // "")"' | \
-    while IFS=$'\t' read -r name command notes; do
-      format_command "$name" "$command" "$notes"
+    echo "$all_commands" | jq -r 'to_entries[] | "\(.key)\t\(.value.command)\t\(.value.notes // "")\t\(.value.directory // "")"' | \
+    while IFS=$'\t' read -r name command notes directory; do
+      format_command "$name" "$command" "$notes" "$directory"
     done
   else
     # List commands matching prefix with colored formatting
-    echo "$all_commands" | jq -r --arg p "$prefix" 'to_entries[] | select(.key|startswith($p)) | "\(.key)\t\(.value.command)\t\(.value.notes // "")"' | \
-    while IFS=$'\t' read -r name command notes; do
-      format_command "$name" "$command" "$notes"
+    echo "$all_commands" | jq -r --arg p "$prefix" 'to_entries[] | select(.key|startswith($p)) | "\(.key)\t\(.value.command)\t\(.value.notes // "")\t\(.value.directory // "")"' | \
+    while IFS=$'\t' read -r name command notes directory; do
+      format_command "$name" "$command" "$notes" "$directory"
     done
   fi
 }
@@ -201,23 +217,26 @@ run_command() {
   local databases
   databases=($(find_all_databases))
   local cmd=""
+  local directory=""
 
   # Search through databases in order (first match wins)
   for db_file in "${databases[@]}"; do
     if [[ -f "$db_file" ]]; then
       # Handle both old format (string) and new format (object)
-      cmd=$(jq -r --arg n "$name" '
+      local result
+      result=$(jq -r --arg n "$name" '
         if .[$n] then
           if (.[$n] | type) == "string" then
-            .[$n]
+            "\(.[$n])\t"
           else
-            .[$n].command
+            "\(.[$n].command)\t\(.[$n].directory // "")"
           end
         else
           empty
         end' "$db_file" 2>/dev/null)
 
-      if [[ -n "$cmd" ]]; then
+      if [[ -n "$result" ]]; then
+        IFS=$'\t' read -r cmd directory <<< "$result"
         break
       fi
     fi
@@ -227,6 +246,19 @@ run_command() {
     echo "bs: no such command '$name'" >&2
     return 1
   }
+
+  # Change to specified directory if provided
+  if [[ -n "$directory" && "$directory" != "null" ]]; then
+    if [[ -d "$directory" ]]; then
+      echo "Running in: $directory" >&2
+      cd "$directory" || {
+        echo "bs: failed to change to directory '$directory'" >&2
+        return 1
+      }
+    else
+      echo "bs: warning: directory '$directory' no longer exists, running in current directory" >&2
+    fi
+  fi
 
   eval "$cmd" "$@"
 }

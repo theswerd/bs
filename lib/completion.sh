@@ -94,15 +94,20 @@ _bs_completion() {
   local command="${COMP_WORDS[$word_index]}"
   case "$command" in
     add)
-      # Complete with --notes/-n flags after the command name
+      # Complete with flags after the command name
       if [[ ${#COMP_WORDS[@]} -gt $((word_index + 2)) ]]; then
         case "$prev" in
           --notes|-n)
             # No completion for notes text
             return 0
             ;;
+          --dir|-d)
+            # Complete with directories
+            COMPREPLY=( $(compgen -d -- "$cur") )
+            return 0
+            ;;
           *)
-            COMPREPLY=( $(compgen -W "--notes -n" -- "$cur") )
+            COMPREPLY=( $(compgen -W "--notes -n --dir -d --cd" -- "$cur") )
             return 0
             ;;
         esac

@@ -14,6 +14,8 @@ GLOBAL OPTIONS:
 COMMANDS:
     add <name> <command...>   Add or replace a command entry
         --notes, -n           Add notes for the command
+        --dir, -d <path>      Always run command in specified directory
+        --cd                  Always run command in current directory
     rm  <name...>             Remove one or more command entries
     ls  [prefix]              List entries (optional prefix filter)
     completion                Output bash completion script
