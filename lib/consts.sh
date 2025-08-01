@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Constants and shared variables
 
+# Prevent double sourcing
+[[ -n "${BS_CONSTS_LOADED:-}" ]] && return 0
+readonly BS_CONSTS_LOADED=1
+
 # Database configuration
 readonly GLOBAL_DB="${HOME}/.bs.json"
 readonly LOCAL_DB=".bs.json"
@@ -8,7 +12,7 @@ DB="$GLOBAL_DB"  # Default to global
 LOCAL_MODE=false
 
 # Reserved commands for future features
-readonly RESERVED_COMMANDS=("api" "mcp" "export" "info" "version")
+readonly RESERVED_COMMANDS=("api" "export" "info" "version")
 
 # Application metadata
 readonly BS_NAME="Ben's BS Manager"

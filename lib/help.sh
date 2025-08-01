@@ -19,6 +19,7 @@ COMMANDS:
     rm  <name...>             Remove one or more command entries
     ls  [prefix]              List entries (optional prefix filter)
     completion                Output bash completion script
+    mcp                       Start MCP server for AI assistant integration
     help                      Show this help message
 
 To enable tab completion:

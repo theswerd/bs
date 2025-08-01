@@ -63,6 +63,11 @@ case "$sub" in
   completion)
     generate_completion_script
     ;;
+  mcp)
+    # Start MCP server
+    source "$SCRIPT_DIR/lib/mcp.sh"
+    bs_mcp_start
+    ;;
   help|-h|--help)
     show_usage
     ;;

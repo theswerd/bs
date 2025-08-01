@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Color definitions for bs
 
+# Prevent double sourcing
+[[ -n "${BS_COLORS_LOADED:-}" ]] && return 0
+readonly BS_COLORS_LOADED=1
+
 # ANSI color codes
 readonly BOLD='\033[1m'
 readonly BLUE='\033[34m'
