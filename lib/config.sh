@@ -1,45 +1,5 @@
 #!/usr/bin/env bash
-# Configuration and global variables
-
-GLOBAL_DB="${HOME}/.bs.json"
-LOCAL_DB=".bs.json"
-DB="$GLOBAL_DB"  # Default to global
-LOCAL_MODE=false
-
-# Set database location based on --local flag
-set_local_mode() {
-  LOCAL_MODE=true
-  DB="$LOCAL_DB"
-}
-
-# Find all .bs.json files from current directory up to home directory
-find_all_databases() {
-  local databases=()
-  local current_dir="$(pwd)"
-  local home_dir="$(cd ~ && pwd)"
-
-  # If in local mode, only use current directory
-  if [[ "$LOCAL_MODE" == "true" ]]; then
-    if [[ -f "$LOCAL_DB" ]]; then
-      databases+=("$LOCAL_DB")
-    fi
-  else
-    # Search from current directory up to home directory
-    while [[ "$current_dir" != "/" && "$current_dir" == "$home_dir"* ]]; do
-      if [[ -f "$current_dir/.bs.json" ]]; then
-        databases+=("$current_dir/.bs.json")
-      fi
-      current_dir="$(dirname "$current_dir")"
-    done
-
-    # Always include global database last (lowest priority)
-    if [[ -f "$GLOBAL_DB" ]]; then
-      databases+=("$GLOBAL_DB")
-    fi
-  fi
-
-  printf '%s\n' "${databases[@]}"
-}
+# Configuration and database management
 
 # Get the primary database for writing (first found or global)
 get_primary_database() {

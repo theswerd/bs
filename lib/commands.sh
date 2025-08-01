@@ -53,6 +53,12 @@ add_command() {
     return 1
   }
 
+  # Check if command name is reserved
+  if is_reserved_command "$name"; then
+    show_reserved_message "$name"
+    return 1
+  fi
+
   [[ ${#cmd_args[@]} -gt 0 ]] || {
     echo "Error: Command is required" >&2
     return 1
@@ -199,13 +205,19 @@ list_commands() {
     # List all commands with colored formatting
     echo "$all_commands" | jq -r 'to_entries[] | "\(.key)\t\(.value.command)\t\(.value.notes // "")\t\(.value.directory // "")"' | \
     while IFS=$'\t' read -r name command notes directory; do
-      format_command "$name" "$command" "$notes" "$directory"
+      # Skip reserved commands (shouldn't be in database anyway, but safeguard)
+      if ! is_reserved_command "$name"; then
+        format_command "$name" "$command" "$notes" "$directory"
+      fi
     done
   else
     # List commands matching prefix with colored formatting
     echo "$all_commands" | jq -r --arg p "$prefix" 'to_entries[] | select(.key|startswith($p)) | "\(.key)\t\(.value.command)\t\(.value.notes // "")\t\(.value.directory // "")"' | \
     while IFS=$'\t' read -r name command notes directory; do
-      format_command "$name" "$command" "$notes" "$directory"
+      # Skip reserved commands (shouldn't be in database anyway, but safeguard)
+      if ! is_reserved_command "$name"; then
+        format_command "$name" "$command" "$notes" "$directory"
+      fi
     done
   fi
 }
@@ -213,6 +225,12 @@ list_commands() {
 run_command() {
   local name="$1"
   shift
+
+  # Check if command name is reserved
+  if is_reserved_command "$name"; then
+    show_reserved_message "$name"
+    return 1
+  fi
 
   local databases
   databases=($(find_all_databases))

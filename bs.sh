@@ -4,7 +4,8 @@ set -euo pipefail
 # Get the directory of this script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Source all library files
+# Source all library files (consts.sh must be first)
+source "$SCRIPT_DIR/lib/consts.sh"
 source "$SCRIPT_DIR/lib/colors.sh"
 source "$SCRIPT_DIR/lib/config.sh"
 source "$SCRIPT_DIR/lib/help.sh"
