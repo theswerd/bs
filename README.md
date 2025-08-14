@@ -167,7 +167,7 @@ Commands are stored in JSON format:
 
 1. You should probably just use just
   
-2. I think the simplicity of this makes it work for my use cases better. Its not a whole config language and thats kinda the point.
+2. I think the simplicity of this makes it work for my use cases better. Its not a whole config language and thats the point.
 
 ## Author
 
