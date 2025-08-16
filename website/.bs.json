@@ -1,0 +1,6 @@
+{
+  "deploy": {
+    "command": "npx freestyle deploy --build --domain bs.swerdlow.dev",
+    "notes": "deploy app"
+  }
+}
