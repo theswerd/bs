@@ -23,10 +23,16 @@ export class BsManager {
         command: 'echo "Everything is working great!"',
         notes: "Check system status",
       },
+      freestyle: {
+        command: "open freestyle",
+      },
     };
   }
 
   processCommand(input: string): string {
+    if (input === "bs freestyle") {
+      window.open("https://docs.freestyle.sh", "_blank");
+    }
     const parts = input.trim().split(" ");
     const command = parts[0];
 
