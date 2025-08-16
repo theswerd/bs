@@ -16,17 +16,21 @@ const BlogPost: React.FC = () => {
         setIsTerminalOpen(false); // Always closed by default on mobile
       }
     };
-    
+
     checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    
-    return () => window.removeEventListener('resize', checkScreenSize);
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
   return (
     <div className="h-screen flex bg-white prose">
       {/* Left Side - Blog Content */}
-      <div className={`flex-1 px-16 py-20 pr-12 pl-8 overflow-y-auto bg-white ${isMobile ? 'w-full' : ''}`}>
+      <div
+        className={`flex-1 px-16 py-20 pr-12 pl-8 overflow-y-auto bg-white ${
+          isMobile ? "w-full" : ""
+        }`}
+      >
         <article className="max-w-3xl mx-auto">
           {/* Header */}
           <header className="mb-12">
@@ -51,7 +55,7 @@ const BlogPost: React.FC = () => {
                 >
                   bs
                 </a>{" "}
-                is an experimental project to make managing scripts easier. My
+                is an experimental cli to make managing scripts easier. My
                 company{" "}
                 <a
                   href="https://docs.freestyle.sh"
@@ -230,7 +234,11 @@ const BlogPost: React.FC = () => {
               </p>
             </section>
             {/* Footer */}
-            <footer className={`mt-16 pt-8 border-t border-gray-300 ${isMobile ? 'mb-20' : ''}`}>
+            <footer
+              className={`mt-16 pt-8 border-t border-gray-300 ${
+                isMobile ? "mb-20" : ""
+              }`}
+            >
               <p className="text-gray-800 font-mono">
                 Created by{" "}
                 <a
@@ -273,18 +281,21 @@ const BlogPost: React.FC = () => {
             onClick={() => setIsTerminalOpen(!isTerminalOpen)}
             className="fixed bottom-4 right-4 z-50 bg-black text-green-400 px-4 py-2 rounded-lg font-mono text-sm shadow-lg hover:bg-gray-800 transition-colors"
           >
-            {isTerminalOpen ? '↓ Terminal' : '↑ Terminal'}
+            {isTerminalOpen ? "↓ Terminal" : "↑ Terminal"}
           </button>
 
           {/* Modal Overlay */}
           {isTerminalOpen && (
-            <div className="fixed inset-0 z-40 bg-black bg-opacity-50" onClick={() => setIsTerminalOpen(false)} />
+            <div
+              className="fixed inset-0 z-40 bg-black bg-opacity-50"
+              onClick={() => setIsTerminalOpen(false)}
+            />
           )}
 
           {/* Terminal Modal */}
           <div
             className={`fixed inset-0 z-50 bg-black transition-transform duration-300 ease-in-out flex flex-col ${
-              isTerminalOpen ? 'translate-y-0' : 'translate-y-full'
+              isTerminalOpen ? "translate-y-0" : "translate-y-full"
             }`}
           >
             {/* Modal Header */}
@@ -297,7 +308,7 @@ const BlogPost: React.FC = () => {
                 ×
               </button>
             </div>
-            
+
             {/* Terminal Content */}
             <div className="flex-1 min-h-0">
               <Terminal />
