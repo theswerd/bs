@@ -163,6 +163,12 @@ Commands are stored in JSON format:
 
 3. I think calling these commands `bs` is highly accurate.
 
+## Why not just?
+
+1. You should probably just use just
+  
+2. I think the simplicity of this makes it work for my use cases better. Its not a whole config language and thats the point.
+
 ## Author
 
 Created by **Ben Swerdlow** ([@theswerd](https://github.com/theswerd)) because I hate long READMEs and have too much free time.
